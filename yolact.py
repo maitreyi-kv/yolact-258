@@ -13,6 +13,7 @@ from layers import Detect
 from layers.interpolate import InterpolateModule
 from backbone import construct_backbone
 
+import torch.utils.model_zoo as modelzoo
 import torch.backends.cudnn as cudnn
 from utils import timer
 from utils.functions import MovingAverage, make_net
@@ -29,7 +30,7 @@ if not use_jit:
 ScriptModuleWrapper = torch.jit.ScriptModule if use_jit else nn.Module
 script_method_wrapper = torch.jit.script_method if use_jit else lambda fn, _rcn=None: fn
 
-
+resnet18_url = 'https://download.pytorch.org/models/resnet18-5c106cde.pth'
 
 class Concat(nn.Module):
     def __init__(self, nets, extra_params):
@@ -476,7 +477,8 @@ class Yolact(nn.Module):
     
     def load_weights(self, path):
         """ Loads weights from a compressed save file. """
-        state_dict = torch.load(path)
+        # state_dict = torch.load(path)
+        state_dict = modelzoo.load_url(resnet18_url, map_location=lambda storage, loc: storage.cuda())
 
         # For backward compatability, remove these (the new variable is called layers)
         for key in list(state_dict.keys()):
